@@ -1,59 +1,35 @@
-  };
-
-  // on websocket error:
-  websocket.onerror = function(event) {
-  	MessageAdd('<div class="message red">Connection to chat failed. Trying to reconnect to the chat...</div>');
-  };
-	
-	websocket.onmessage = function(event) {
-  	var data = JSON.parse(event.data);
-
-  	if (data.type == "message") {
-	  	MessageAdd('<div class="message">' + data.username + ': ' + data.message + '</div>');
-   	}
-  };
-	
- 	document.getElementById("chat-form").addEventListener("submit", function(event) {
-  	event.preventDefault();
-
-  	var message_element = document.getElementsByTagName("input")[0];
-  	var message = message_element.value;
-
-	  if (message.toString().length) {
-	  	var username = localStorage.getItem("username");
-		
-	  	var data = {
-	  		type: "message",
-	  		username: username,
-  			message: message
-  		};
-
-	  	websocket.send(JSON.stringify(data));
-  		message_element.value = "";
-  	}
-  }, false);
-	
-	function Username() {
-	  var username = window.prompt("Enter your username:", "");
-	
-	  if (username.toString().length > 3) {
-	  	localStorage.setItem("username", username);
-	  }
-   else {
-		alert("Your username must be at least three characters.");
-		Username();
-   }
-	}
-
-Username();
-	
-	function MessageAdd(message) {
-	var chat_messages = document.getElementById("chat-messages");
-
-	chat_messages.insertAdjacentHTML("beforeend", message);
-	chat_messages.scrollTop = chat_messages.scrollHeight;
-}
+  Enter Chat and press enter
+<div><input id=input placeholder="message" /></div>
+Chat Output
+<div id=box></div>
+<script src=https://cdn.pubnub.com/sdk/javascript/pubnub.4.28.2.min.js></script>
+<script> (function() {
+        var pubnub = new PubNub({
+            publishKey: 'KORNRT2018',
+            subscribeKey: 'KORNRT2018'
+        });
+        function $(id) {
+            return document.getElementById(id);
+        }
+        var box = $('box'),
+            input = $('input'),
+            channel = '10chat-demo';
+        pubnub.addListener({
+            message: function(obj) {
+                box.innerHTML = ('' + obj.message).replace(/[<>]/g, '') + '<br>' + box.innerHTML
+            }
+        });
+        pubnub.subscribe({
+            channels: [channel]
+        });
+        input.addEventListener('keyup', function(e) {
+            if ((e.keyCode || e.charCode) === 13) {
+                pubnub.publish({
+                    channel: channel,
+                    message: input.value,
+                    x: (input.value = '')
+                });
+            }
+        });
+    })();
 </script>
-	
-
-	
